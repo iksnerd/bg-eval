@@ -1,0 +1,26 @@
+[project]
+name = "bg-eval"
+version = "1.0.0"
+description = "Loader and evaluation harness for the Glassbox Bulgarian models"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+
+# torch alone runs model.py. The rest is what the three evaluation scripts need: `tokenizers`
+# to read the BPE tokenizer the language models ship with, pandas + pyarrow for the Hub's
+# parquet. pyarrow is named explicitly rather than left to pandas — pandas 3 requires it,
+# pandas 2 does not, and on pandas 2 the failure is an unhelpful "Unable to find a usable
+# engine" rather than a missing-dependency error.
+dependencies = [
+    "torch>=2.6",       # weights_only=True is the default from 2.6; model.py relies on it
+    "tokenizers>=0.20",
+    "pandas>=2.0",
+    "pyarrow>=14.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+# Flat scripts, not an installable package: `uv sync` should build an environment, not a wheel.
+[tool.uv]
+package = false

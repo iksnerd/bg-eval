@@ -1,0 +1,45 @@
+{
+  "benchmark": "fluency judging on 2000 paired (erroneous, correct) Bulgarian sentences",
+  "why_this_metric": "Does the model give the correct sentence a lower per-character loss? Chance is 50%. Same pairs, same order, same scoring function for both models.",
+  "protocol": {
+    "pairs": 2000,
+    "source": "thebogko/bulgarian-grammar-mistakes + thebogko/bulgarian-spelling-mistakes, deduplicated, then the first 2000 rows whose `erroneous` and `correct` columns differ",
+    "score": "sum of nats over the sentence divided by its character count"
+  },
+  "preference_accuracy": {
+    "ckpt_gpt2bg": 0.9305,
+    "INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0": 0.9175,
+    "INSAIT-Institute/BgGPT-Gemma-3-4B-IT": 0.846
+  },
+  "mcnemar": {
+    "vs_gemma2": {
+      "both_right": 1782,
+      "both_wrong": 86,
+      "only_first": 79,
+      "only_second": 53,
+      "discordant": 132,
+      "p_value": 0.0292
+    },
+    "vs_gemma3": {
+      "both_right": 1636,
+      "both_wrong": 83,
+      "only_first": 225,
+      "only_second": 56,
+      "discordant": 281,
+      "p_value": 0.0
+    }
+  },
+  "reading": "A win over both, and the size of the win is the point: 91M against 2.61B and 4.30B. Against Gemma-2 p = 0.0292 clears 0.05 and only just — two comparisons were run, so under a Bonferroni correction for two (0.025) it does not clear. Against Gemma-3 it clears anything. Both opponents are instruct models and this metric reads raw-text likelihood, which instruction tuning decalibrates; INSAIT's own line shows it, Gemma-3 scoring worse than Gemma-2 while larger and newer.",
+  "why_500_real_pairs": {
+    "reason": "Some rows have `erroneous` character-for-character identical to `correct`. They are not pairs: there is nothing to discriminate, every model scores them identically, and the scoring counts the resulting tie as a miss. Reading skips them and continues down the file, so 2000 means 2000 usable pairs.",
+    "why_not_filter_a_head_slice": "The identical rows cluster near the front — 65 of the first 500, against 517 in all 30,533 deduplicated rows. Taking the first 500 rows and filtering afterwards lands in the densest patch and leaves 435, which both shrinks the sample and makes the denominator an artifact of where the flaw happens to sit.",
+    "check_it_yourself": "both models report 0 ties, so no scored pair is degenerate",
+    "score_the_raw_first_500_instead": "python judge.py --checkpoint ckpt_gpt2bg.pt --tokenizer tokenizer_gpt2.json --keep-degenerate"
+  },
+  "measured_on": "CUDA (Modal A10G) 2026-08-01, fp32 for ours and bf16 for both BgGPT arms, via cloud/baselines_modal.py::all_tasks",
+  "device_note": "Forward passes over frozen weights, so this is reference numerics rather than a training measurement. Training comparisons in this project are CUDA-only for exactly the reason this is not.",
+  "reproduced": "CUDA and MPS agree on all 2000 per-item outcomes for ckpt_gpt2bg (0.9305, 1861/2000, 0 ties on both), which is what makes the device policy's reference-numerics carve-out measured rather than asserted.",
+  "tolerance": "the per-item outcomes are the thing to check; an accuracy that matches while the outcomes do not means the pair order changed",
+  "source": "experiments/bulgarian/hf_baselines_FINDINGS.md, Result 2",
+  "why_2000_and_not_500": "500 pairs read p = 0.0961 and looked like a tie. The source rows are not shuffled and the first 500 are easier than the corpus: the same model scores 0.942 on 500 and 0.9305 on 2000. The dataset holds 30,016 usable pairs, so the tie was undermeasured rather than real."
+}

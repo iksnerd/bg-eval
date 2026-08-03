@@ -1,0 +1,82 @@
+{
+  "benchmark": "shlyokavitsa restoration, exact match by phrase length",
+  "why_this_metric": "The whole phrase has to be character-perfect. Character error rate is reported alongside it because it is the number that shows how near the misses are.",
+  "protocol": {
+    "checkpoint": "restore_big.pt (4,734,208 parameters)",
+    "pairs": "glassbox/shlyokavitsa-pairs, test split — built from Bulgarian Wikipedia, article-disjoint, never seen in training",
+    "per_length": 200,
+    "decoding": "greedy; constrained (wide) is the default and the row to beat"
+  },
+  "exact_match": {
+    "3": 0.965,
+    "5": 0.92,
+    "10": 0.82,
+    "15": 0.79,
+    "20": 0.72,
+    "25": 0.37
+  },
+  "cer": {
+    "3": 0.0021,
+    "5": 0.0026,
+    "10": 0.0036,
+    "15": 0.0026,
+    "20": 0.0031,
+    "25": 0.0131
+  },
+  "in_corpus_comparison": {
+    "20": 0.92,
+    "note": "0.92 on pairs from the model's own training distribution against 0.720 here, constrained. The drop is the finding: Wikipedia is dense with proper nouns and abbreviations, which is where the romanization's irrecoverable collisions live."
+  },
+  "reading": "n = 200 per length. Constrained decoding costs zero parameters and buys +0.155 exact match at 25 words with an 8.5x lower CER. It works by making structural errors — lost alignment, dropped or duplicated characters — unrepresentable, which is why the gain tracks the structural row and not the ambiguity row. The 0.040 residue at 25 words is the shipped policy accepting spellings people actually type: a legal reading of the input that is not the reference's. It does nothing for the a/u ambiguity, which is information the keyboard destroyed.",
+  "measured_on": "CPU/MPS reference numerics over frozen weights, greedy, 2026-08-01",
+  "device_note": "Greedy decoding over frozen weights — deterministic given the same pairs.",
+  "reproduced": "2026-08-01 at n = 200, both arms, experiments/bulgarian/restore_eval.py --constrained {off,wide}",
+  "tolerance": "greedy decoding makes this exact — a differing number means different pairs, not different hardware",
+  "source": "experiments/bulgarian/hf_baselines_FINDINGS.md Result 3, and docs/hf_restorer_card.md",
+  "exact_match_unconstrained": {
+    "3": 0.955,
+    "5": 0.915,
+    "10": 0.81,
+    "15": 0.765,
+    "20": 0.67,
+    "25": 0.215
+  },
+  "cer_unconstrained": {
+    "3": 0.0052,
+    "5": 0.0032,
+    "10": 0.0047,
+    "15": 0.0034,
+    "20": 0.0106,
+    "25": 0.1113
+  },
+  "superseded": {
+    "per_length": 40,
+    "exact_match": {
+      "3": 0.875,
+      "5": 0.875,
+      "10": 0.9,
+      "15": 0.65,
+      "20": 0.625,
+      "25": 0.325
+    },
+    "why": "n = 40 is too thin to read length-by-length: it puts 10 words above 5, which n = 200 shows is sampling noise. It reproduces exactly at n = 40 and is kept only as provenance."
+  },
+  "structural_error": {
+    "plain": {
+      "3": 0.01,
+      "5": 0.01,
+      "10": 0.01,
+      "15": 0.035,
+      "20": 0.085,
+      "25": 0.67
+    },
+    "constrained": {
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.0,
+      "15": 0.0,
+      "20": 0.0,
+      "25": 0.04
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "benchmark": "bits per character on held-out Bulgarian",
+  "why_this_metric": "Per-token cross-entropy is not comparable across tokenizers. Nats over the same characters is: bpc = nats / (chars * ln 2).",
+  "protocol": {
+    "text": "thebogko/bulgarian-grammar-mistakes + thebogko/bulgarian-spelling-mistakes, the `correct` column, deduplicated, grammar set first",
+    "max_chars": 50000,
+    "window": "256 tokens, non-overlapping; the first token of each window is never predicted",
+    "chars_covered": "49,217 (ours) / 49,590 (Gemma-2) / 49,528 (Gemma-3) — whole 256-token windows, so coverage differs slightly by tokenizer"
+  },
+  "bpc": {
+    "ckpt_gpt2bg": 1.3041,
+    "INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0": 1.16,
+    "INSAIT-Institute/BgGPT-Gemma-3-4B-IT": 1.1683
+  },
+  "detail": {
+    "ckpt_gpt2bg": {
+      "params": 91263768,
+      "chars_covered": 49217
+    },
+    "INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0": {
+      "params": 2610000000,
+      "ce_per_token": 2.4431,
+      "chars_covered": 49590
+    },
+    "INSAIT-Institute/BgGPT-Gemma-3-4B-IT": {
+      "params": 4300000000,
+      "ce_per_token": 2.4577,
+      "chars_covered": 49528
+    }
+  },
+  "reading": "A loss, and it is on the card: 0.144 bpc behind the better of two much larger, continued-pretrained models. Worth noting which one is better — Gemma-2-2.6B beats Gemma-3-4B here despite being older and smaller.",
+  "measured_on": "CUDA (Modal A10G), 2026-08-01, fp32 for ours and bf16 for the BgGPT arms",
+  "device_note": "Forward passes over frozen weights, so this is reference numerics rather than a training measurement. Training comparisons in this project are CUDA-only for exactly the reason this is not: MPS and CUDA can disagree well beyond seed noise while a model is learning.",
+  "reproduced": "CPU, 2026-07-28, under the superseded 12,000-char protocol: 1.3118 for ckpt_gpt2bg with chars_covered 11,690. The current numbers are the ~50,000-char CUDA run.",
+  "tolerance": "the fourth decimal moves with float reassociation across devices; a rerun differing by more than 0.001 bpc means the text or the window changed, not the hardware",
+  "source": "experiments/bulgarian/hf_baselines_FINDINGS.md, Result 1",
+  "superseded": {
+    "max_chars": 12000,
+    "bpc": {
+      "ckpt_gpt2bg": 1.3119,
+      "INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0": 1.1621
+    },
+    "why": "a 11.7k-character slice, chosen when the 2.6B baseline ran on a laptop; the cloud path made ~50k affordable and it is the better sample."
+  }
+}

@@ -1,0 +1,28 @@
+name: tests
+
+# The evaluations themselves need published checkpoints and the network, so CI cannot run them.
+# What it can do is prove the loader still round-trips, still refuses what it should refuse, and
+# that the scoring arithmetic still reproduces the published contingency table — which is every
+# claim this repo makes about itself rather than about a model.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The floor and the ceiling of what pyproject declares. torch is the binding
+        # constraint on the ceiling, not this code.
+        python-version: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: test
+        run: uv run --python ${{ matrix.python-version }} --group dev pytest -q
